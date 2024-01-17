@@ -61,7 +61,7 @@ for (const file of eventFiles) {
 }
 
 /**********************************************************************/
-// Define Collection of Commands, Slash Commands and cooldowns
+// Define Collection of n, Slash Commands and cooldowns
 
 client.commands = new Collection();
 client.slashCommands = new Collection();

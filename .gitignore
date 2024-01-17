@@ -3,6 +3,7 @@
 .vscode/
 .idea/
 .node-version
+sensitivedata.json
 
 # Logs
 logs
@@ -109,3 +110,4 @@ dist
 
 # TernJS port file
 .tern-port
+sensitivedata.json
