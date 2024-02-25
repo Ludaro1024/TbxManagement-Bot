@@ -10,5 +10,3 @@ This is a Discord bot for myScripts i did with a bot template called NamVr its a
 
 Link removal!
 when a non admin user posts more then 2 links then it will remove all links from the user that match the spam link and remove all links from them for 2 seconds!
-
-yay
