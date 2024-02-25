@@ -2,23 +2,41 @@ const { SlashCommandBuilder } = require("discord.js");
 const fs = require("fs");
 const axios = require("axios");
 const mysql = require("mysql2/promise"); // Import the mysql2 library
+const path = require("path");
+// Get the current directory of the script
+const currentDir = __dirname;
+// Construct the path to config.json in the root folder
+const configPath = path.join(currentDir, "../../../config.json");
 
-// Load the config.json file
-const configPath = "./config.json"; // Assuming it's in the same directory as your script
+try {
+	// Load the configuration from the JSON file
+	const rawConfig = fs.readFileSync(configPath);
+	const config = JSON.parse(rawConfig);
+} catch (error) {
+	console.error("Error reading or parsing config.json:", error.message);
+}
 
-// Declare apiKey at a higher scope
-let apiKey = "0f5fd4ff08f041bba59c3d929bcaec7d79514819";
-let tableName = "tbx-id-bot"; // Set the table name here
+let config; // Declare config outside the try block
 
-// Database configuration
-const dbConfig = {
-	host: "localhost", // Replace with your MySQL host
-	user: "jeycraft", // Replace with your MySQL username
-	password: "rIe6$1I40w0", // Replace with your MySQL password
-	database: "your_database_name", // Replace with your database name
-};
+try {
+	// Load the configuration from the JSON file or wherever you get it
+	const rawConfig = fs.readFileSync(configPath);
+	config = JSON.parse(rawConfig);
 
-// Create a MySQL connection pool
+	// Create dbConfig based on the loaded configuration
+	dbConfig = {
+		host: config.mysqlip,
+		user: config.mysqlusername,
+		password: config.mysqlpassword,
+		database: config.databasename,
+	};
+
+	// Rest of the code using dbConfig...
+} catch (error) {
+	console.error("Error reading or parsing config.json:", error.message);
+}
+
+let tableName = config.tableName;
 const pool = mysql.createPool(dbConfig);
 
 function giveDiscordRole(roleId, discordClient, guildId, userId) {
@@ -30,6 +48,9 @@ function giveDiscordRole(roleId, discordClient, guildId, userId) {
 	if (guild && member && role) {
 		member.roles.add(role);
 		console.log(`Gave role ${role.name} to user ${member.user.tag}`);
+		member.send(
+			`You have been given the role ${role.name} for the script ${scriptname}`
+		);
 	} else {
 		console.error("Failed to give role. Check guild, member, and role exist.");
 	}
@@ -61,31 +82,20 @@ function giveDiscordRole(roleId, discordClient, guildId, userId) {
 	try {
 		// Create the table if it doesn't exist
 		await db.query(`
-            CREATE TABLE IF NOT EXISTS \`${tableName}\` (
+            CREATE TABLE IF NOT EXISTS \`${config.tableName}\` (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 discordid VARCHAR(255),
                 developerdiscordid VARCHAR(255),
                 tbxid VARCHAR(255)
             )
         `);
-		console.log(`Table '${tableName}' created or already exists.`);
+		console.log(`Table '${config.tableName}' created or already exists.`);
 	} catch (error) {
 		console.error("Error creating table:", error);
 	} finally {
 		db.end();
 	}
 })();
-
-try {
-	const rawData = fs.readFileSync(configPath);
-	const configData = JSON.parse(rawData);
-
-	// Now you can access the configuration data from configData object
-	apiKey = configData.tebexSecret;
-	// ...
-} catch (error) {
-	console.error("Error reading config.json:", error);
-}
 
 // Function to check if a Tebex ID exists
 async function doesTebexIdExist(apiKey, tbxId) {
@@ -115,7 +125,10 @@ module.exports = {
 			const userId = interaction.user.id;
 
 			// Check if the Tebex ID exists
-			const [tebexIdExists, tbxData] = await doesTebexIdExist(apiKey, tbxId);
+			const [tebexIdExists, tbxData] = await doesTebexIdExist(
+				config.tebexSecret,
+				tbxId
+			);
 
 			if (!tebexIdExists) {
 				await interaction.reply({
@@ -154,12 +167,12 @@ module.exports = {
 					`UPDATE \`${tableName}\` SET developerdiscordid = ? WHERE tbxid = ?`,
 					[userId, tbxId]
 				);
-				packages = tbxData.data.packages;
+				packages = tbxData.packages;
 				if (packages && packages.length > 0) {
 					for (const package of packages) {
 						scriptName = package.name;
-						if (scripts[scriptName]) {
-							const discordRole = scripts[scriptName];
+						if (config.Scripts[scriptName]) {
+							const discordRole = config.Scripts[scriptName];
 							giveDiscordRole(
 								discordRole,
 								interaction.client,

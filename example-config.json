@@ -1,0 +1,22 @@
+{
+	"info": "RENAME THIS FILE TO config.json",
+	"prefix": "!",
+	"token": "",
+	"owner": "",
+	"client_id": "",
+	"test_guild_id": "",
+	"tebexSecret": "",
+	"mysqlip": "",
+	"mysqlusername": "",
+	"admingroup": [""],
+	"mysqlpassword": "",
+	"databasename": "",
+	"tableName": "",
+	"Text": {
+		"hello": ""
+	},
+	"Scripts": {
+		"mymultichar3beta": ""
+	},
+	"Debug": true
+}

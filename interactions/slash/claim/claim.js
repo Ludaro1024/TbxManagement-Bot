@@ -2,27 +2,47 @@ const { SlashCommandBuilder } = require("discord.js");
 const fs = require("fs");
 const axios = require("axios");
 const mysql = require("mysql2/promise"); // Import the mysql2 library
-const { config } = require("process");
+const path = require("path");
+// Get the current directory of the script
+const currentDir = __dirname;
 
-// Load the config.json file
-const configPath = "./config.json"; // Assuming it's in the same directory as your script
+// Construct the path to config.json in the root folder
+const configPath = path.join(currentDir, "../../../config.json");
 
-// Declare apiKey at a higher scope
-let apiKey = "0f5fd4ff08f041bba59c3d929bcaec7d79514819";
-let tableName = "tbx-id-bot"; // Set the table name here
+try {
+	// Load the configuration from the JSON file
+	const rawConfig = fs.readFileSync(configPath);
+	const config = JSON.parse(rawConfig);
+} catch (error) {
+	console.error("Error reading or parsing config.json:", error.message);
+}
 
-// Database configuration
-const dbConfig = {
-	host: "localhost", // Replace with your MySQL host
-	user: "jeycraft", // Replace with your MySQL username
-	password: "rIe6$1I40w0", // Replace with your MySQL password
-	database: "your_database_name", // Replace with your database name
-};
+let config; // Declare config outside the try block
+
+try {
+	// Load the configuration from the JSON file or wherever you get it
+	const rawConfig = fs.readFileSync(configPath);
+	config = JSON.parse(rawConfig);
+
+	// Create dbConfig based on the loaded configuration
+	dbConfig = {
+		host: config.mysqlip,
+		user: config.mysqlusername,
+		password: config.mysqlpassword,
+		database: config.databasename,
+	};
+
+	// Rest of the code using dbConfig...
+} catch (error) {
+	console.error("Error reading or parsing config.json:", error.message);
+}
+
+let tableName = config.tableName;
 
 // Create a MySQL connection pool
 const pool = mysql.createPool(dbConfig);
 
-function giveDiscordRole(roleId, discordClient, guildId, userId) {
+function giveDiscordRole(roleId, discordClient, guildId, userId, scriptname) {
 	// Implement your logic to give the Discord role using the roleId and Discord.js
 	const guild = discordClient.guilds.cache.get(guildId);
 	const member = guild.members.cache.get(userId);
@@ -31,14 +51,15 @@ function giveDiscordRole(roleId, discordClient, guildId, userId) {
 	if (guild && member && role) {
 		member.roles.add(role);
 		console.log(`Gave role ${role.name} to user ${member.user.tag}`);
+		// make the bot say it also to the user
+		member.send(
+			`You have been given the role ${role.name} for the script ${scriptname}`
+		);
 	} else {
 		console.error("Failed to give role. Check guild, member, and role exist.");
 	}
 }
 
-// Function to check if a Tebex ID exists
-
-// Create the database and table if they don't exist
 (async () => {
 	const connection = await mysql.createConnection({
 		host: dbConfig.host,
@@ -63,32 +84,21 @@ function giveDiscordRole(roleId, discordClient, guildId, userId) {
 	try {
 		// Create the table if it doesn't exist
 		await db.query(`
-            CREATE TABLE IF NOT EXISTS \`${tableName}\` (
+            CREATE TABLE IF NOT EXISTS \`${config.tableName}\` (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 discordid VARCHAR(255),
                 developerdiscordid VARCHAR(255),
-                tbxid VARCHAR(255)
+                tbxid VARCHAR(255),
+				keymastername VARCHAR(255)
             )
         `);
-		console.log(`Table '${tableName}' created or already exists.`);
+		console.log(`Table '${config.tableName}' created or already exists.`);
 	} catch (error) {
 		console.error("Error creating table:", error);
 	} finally {
 		db.end();
 	}
 })();
-
-try {
-	const rawData = fs.readFileSync(configPath);
-	const configData = JSON.parse(rawData);
-
-	// Now you can access the configuration data from configData object
-	apiKey = configData.tebexSecret;
-	// ...
-	scripts = configData.scripts;
-} catch (error) {
-	console.error("Error reading config.json:", error);
-}
 
 // Function to check if a Tebex ID exists
 async function doesTebexIdExist(apiKey, tbxId) {
@@ -100,9 +110,18 @@ async function doesTebexIdExist(apiKey, tbxId) {
 		`https://plugin.tebex.io/payments/${tbxId}`,
 		{ headers }
 	);
-	return [true, response];
-}
 
+	if (response.status === 200) {
+		const responseData = response.data;
+		const keymaster = responseData.player.name;
+
+		return [true, responseData, keymaster];
+	} else if (response.status === 404) {
+		return [false, null, null];
+	} else {
+		throw new Error(`Tebex API returned an error: ${response.statusText}`);
+	}
+}
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName("claim")
@@ -114,12 +133,15 @@ module.exports = {
 	async execute(interaction) {
 		try {
 			// Get the value of the 'tbx-id' option
-			const tbxId = interaction.options.getString("tbx-id");
+			const tbxId = interaction.options
+				.getString("tbx-id")
+				.replace(/^tbx-/i, "");
 			const userId = interaction.user.id;
-
 			// Check if the Tebex ID exists
-			const [tebexIdExists, tbxData] = await doesTebexIdExist(apiKey, tbxId);
-			console.log(tbxData);
+			const [tebexIdExists, tbxData, keymastername] = await doesTebexIdExist(
+				config.tebexSecret,
+				tbxId
+			);
 			if (!tebexIdExists) {
 				await interaction.reply({
 					content: `TBX ID '${tbxId}' does not exist or is invalid.`,
@@ -137,20 +159,27 @@ module.exports = {
 			if (rows.length === 0) {
 				// User's discord ID is not claimed, insert it into the database
 				await pool.query(
-					`INSERT INTO \`${tableName}\` (discordid, developerdiscordid, tbxid) VALUES (?, ?, ?)`,
-					[userId, "", tbxId]
+					`INSERT INTO \`${tableName}\` (discordid, developerdiscordid, tbxid, keymastername) VALUES (?, ?, ?, ?)`,
+					[userId, "", tbxId, keymastername || null] // Use null if keymastername is not available
 				);
-				packages = tbxData.data.packages;
-				if (packages && packages.length > 0) {
-					for (const package of packages) {
+
+				if (config.Debug) {
+					console.log(tbxData);
+					console.log(tbxData.packages.length);
+				}
+				// Check if tbxData.data exists and has packages
+				if (tbxData && tbxData.packages && tbxData.packages.length > 0) {
+					for (const package of tbxData.packages) {
 						scriptName = package.name;
-						if (scripts[scriptName]) {
-							const discordRole = scripts[scriptName];
+
+						if (config.Scripts[scriptName]) {
+							const discordRole = config.Scripts[scriptName];
 							giveDiscordRole(
 								discordRole,
 								interaction.client,
 								interaction.guild.id,
-								userId
+								userId,
+								scriptName
 							);
 						}
 					}
@@ -173,7 +202,7 @@ module.exports = {
 			console.error("Error handling /claim command:", error);
 			await interaction.reply({
 				content:
-					"An error occurred while processing the command is the tbx id wrong? (tbx-488244..).",
+					"An error occurred while processing the command. Is the tbx id wrong? ().",
 				ephemeral: true,
 			});
 		}

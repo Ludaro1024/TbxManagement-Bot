@@ -1,0 +1,21 @@
+{
+	"prefix": "!",
+	"token": "NDY5ODQzNDk0NDE3MDcyMTUw.GNw3Bg.nN3GnUjNhKnlYjX2S1Dddyr22CtUZAKRUBP-JM",
+	"owner": "255746827352014849",
+	"client_id": "469843494417072150",
+	"test_guild_id": "1197123238069813339",
+	"tebexSecret": "0f5fd4ff08f041bba59c3d929bcaec7d79514819",
+	"mysqlip": "localhost",
+	"mysqlusername": "jeycraft",
+	"admingroup": ["1211074692815786014"],
+	"mysqlpassword": "rIe6$1I40w0",
+	"databasename": "your_database_name",
+	"tableName": "tbx-id-bot",
+	"Text": {
+		"hello": "Hello World"
+	},
+	"Scripts": {
+		"mymultichar3beta": "1211080344841756692"
+	},
+	"Debug": true
+}
