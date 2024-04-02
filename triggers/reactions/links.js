@@ -25,6 +25,13 @@ module.exports = {
 
 	async execute(message, args) {
 		// Check if the message has any links
+  const isAdmin = message.member.roles.cache.some(userRole =>
+                config.admingroup.includes(userRole.id)
+            );
+
+			if(isAdmin != true){
+			console.log("isAdmin is false")
+
 		const links = message.content.match(/https?:\/\/\S+/gi);
 
 		if (links && links.length > 0) {
@@ -92,10 +99,9 @@ module.exports = {
 				console.log("Duplicate links found for an admin user");
 			}
 		}
-	},
+	}
+}
 };
-
-// ... (rest of the code)
 
 function checkUserAdminRole(member) {
 	return config.admingroup.some((roleId) => member.roles.cache.has(roleId));
@@ -177,3 +183,4 @@ function removeFromBlacklist(userId) {
 	delete blacklist[userId];
 	console.log(`Removed user ${userId} from the blacklist.`);
 }
+

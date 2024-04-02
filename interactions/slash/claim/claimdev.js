@@ -39,7 +39,7 @@ try {
 let tableName = config.tableName;
 const pool = mysql.createPool(dbConfig);
 
-function giveDiscordRole(roleId, discordClient, guildId, userId) {
+function giveDiscordRole(roleId, discordClient, guildId, userId, scriptname) {
 	// Implement your logic to give the Discord role using the roleId and Discord.js
 	const guild = discordClient.guilds.cache.get(guildId);
 	const member = guild.members.cache.get(userId);
@@ -167,7 +167,7 @@ module.exports = {
 					`UPDATE \`${tableName}\` SET developerdiscordid = ? WHERE tbxid = ?`,
 					[userId, tbxId]
 				);
-				packages = tbxData.packages;
+				packages = tbxData.data.packages;
 				if (packages && packages.length > 0) {
 					for (const package of packages) {
 						scriptName = package.name;
@@ -177,7 +177,8 @@ module.exports = {
 								discordRole,
 								interaction.client,
 								interaction.guild.id,
-								userId
+								userId,
+								scriptName
 							);
 						}
 					}

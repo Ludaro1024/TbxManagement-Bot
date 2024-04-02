@@ -92,6 +92,15 @@ function giveDiscordRole(roleId, discordClient, guildId, userId, scriptname) {
 				keymastername VARCHAR(255)
             )
         `);
+
+		await db.query(` CREATE TABLE IF NOT EXISTS \`${config.shortcuttablename}\` (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                discordid VARCHAR(255),
+                shortcutname VARCHAR(255),
+                shortcutvalue VARCHAR(255),
+				needstobeadmin BOOLEAN DEFAULT FALSE
+            )`);
+			
 		console.log(`Table '${config.tableName}' created or already exists.`);
 	} catch (error) {
 		console.error("Error creating table:", error);

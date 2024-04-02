@@ -12,9 +12,7 @@
 	"mysqlpassword": "",
 	"databasename": "",
 	"tableName": "",
-	"Text": {
-		"hello": ""
-	},
+	"shortcuttablename": "shortcuts",
 	"Scripts": {
 		"mymultichar3beta": ""
 	},

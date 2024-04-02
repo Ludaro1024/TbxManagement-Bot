@@ -1,36 +1,36 @@
-/**
- * @file Sample autocomplete interaction
- * @author Naman Vrati
- * @since 3.3.0
- * @version 3.3.0
- */
+// /**
+//  * @file Sample autocomplete interaction
+//  * @author Naman Vrati
+//  * @since 3.3.0
+//  * @version 3.3.0
+//  */
 
-/**
- * @type {import("../../../typings").AutocompleteInteraction}
- */
-module.exports = {
-	name: "sample",
+// /**
+//  * @type {import("../../../typings").AutocompleteInteraction}
+//  */
+// module.exports = {
+// 	name: "sample",
 
-	async execute(interaction) {
-		// Preparation for the autocomplete request.
+// 	async execute(interaction) {
+// 		// Preparation for the autocomplete request.
 
-		const focusedValue = interaction.options.getFocused();
+// 		const focusedValue = interaction.options.getFocused();
 
-		// Extract choices automatically from your choice array (can be dynamic too)!
+// 		// Extract choices automatically from your choice array (can be dynamic too)!
 
-		const choices = ["your", "choices"];
+// 		const choices = ["your", "choices"];
 
-		// Filter choices according to user input.
+// 		// Filter choices according to user input.
 
-		const filtered = choices.filter((choice) =>
-			choice.startsWith(focusedValue)
-		);
+// 		const filtered = choices.filter((choice) =>
+// 			choice.startsWith(focusedValue)
+// 		);
 
-		// Respond the request here.
-		await interaction.respond(
-			filtered.map((choice) => ({ name: choice, value: choice }))
-		);
+// 		// Respond the request here.
+// 		await interaction.respond(
+// 			filtered.map((choice) => ({ name: choice, value: choice }))
+// 		);
 
-		return;
-	},
-};
+// 		return;
+// 	},
+// };
